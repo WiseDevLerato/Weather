@@ -7,18 +7,19 @@ class CitySearchBox extends StatefulWidget {
   const CitySearchBox({super.key});
 
   @override
-  State<CitySearchBox> createState() => _CitySearchRowState();
+  State<CitySearchBox> createState() => _CitySearchBoxState();
 }
 
-class _CitySearchRowState extends State<CitySearchBox> {
+class _CitySearchBoxState extends State<CitySearchBox> {
   static const _radius = 30.0;
 
-  late final _searchController = TextEditingController();
+  late final TextEditingController _searchController;
 
   @override
   void initState() {
     super.initState();
-    _searchController.text = context.read<WeatherProvider>().city;
+    final initialCity = context.read<WeatherProvider>().city;
+    _searchController = TextEditingController(text: initialCity);
   }
 
   @override
@@ -27,7 +28,15 @@ class _CitySearchRowState extends State<CitySearchBox> {
     super.dispose();
   }
 
-  // circular radius
+  void _onSearch() {
+    FocusScope.of(context).unfocus(); // hide keyboard
+    final city = _searchController.text.trim();
+    if (city.isNotEmpty) {
+      context.read<WeatherProvider>().city = city;
+      // TODO: Trigger weather fetch logic if not handled by provider setter
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -35,15 +44,32 @@ class _CitySearchRowState extends State<CitySearchBox> {
       child: SizedBox(
         height: _radius * 2,
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Expanded(
+            Expanded(
               child: TextField(
-                //TODO make component functional and add style
+                controller: _searchController,
+                decoration: InputDecoration(
+                  hintText: 'Enter city name',
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 20.0),
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(_radius),
+                      bottomLeft: Radius.circular(_radius),
+                    ),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+                textInputAction: TextInputAction.search,
+                onSubmitted: (_) => _onSearch(),
               ),
             ),
             InkWell(
+              onTap: _onSearch,
               child: Container(
+                height: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
                 alignment: Alignment.center,
                 decoration: const BoxDecoration(
                   color: AppColors.accentColor,
@@ -52,17 +78,15 @@ class _CitySearchRowState extends State<CitySearchBox> {
                     bottomRight: Radius.circular(_radius),
                   ),
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 15.0),
-                  child: Text('search', style: Theme.of(context).textTheme.bodyLarge),
+                child: Text(
+                  'Search',
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyLarge
+                      ?.copyWith(color: Colors.white),
                 ),
               ),
-              onTap: () {
-                FocusScope.of(context).unfocus();
-                context.read<WeatherProvider>().city = _searchController.text;
-                //TODO search weather
-              },
-            )
+            ),
           ],
         ),
       ),
