@@ -14,7 +14,7 @@ class HttpWeatherRepository {
   final http.Client client;
 
   Future<WeatherData> getWeather({required String city}) async {
-    final url = api.weather(city); // ✅ FIXED
+    final url = api.weather(city);
     final response = await client.get(url);
     if (response.statusCode != 200) {
       throw Exception('Failed to load weather');
@@ -33,3 +33,4 @@ class HttpWeatherRepository {
     return ForecastData.fromJson(data);
   }
 }
+
